@@ -14,8 +14,7 @@ def main():
         for line in fileinput.input():
             if(set_args(line)):
                 continue
-            firstWord = format(line, firstWord)
-               
+            firstWord = format(line, firstWord)  
         print()
 
 def set_args(line):
@@ -82,9 +81,11 @@ def format(line, firstWord):
     global charCount
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
-        
+   
         if line == '\n':
             print('\n')
+            lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
+            charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
             firstWord = True
             return firstWord
 
@@ -101,10 +102,12 @@ def format(line, firstWord):
             # a fresh line. Proceed to the next iteration
             if charCount > formatKeys["LW"]: 
                 print()
-                charCount = 0
+                lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
+                charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+                #charCount = 0
                 charCount += len(x) 
                 print(x, end="")
-                charCount+=1
+                charCount+=1 #still dont know why this is here...
                 firstWord = False
                 continue
 
@@ -118,7 +121,9 @@ def format(line, firstWord):
             # is the end of the line    
             elif charCount == formatKeys["LW"]:
                 print(" {}".format(x))
-                charCount = 0
+                lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
+                charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+                #charCount = 0
                 firstWord = True
                 continue
 
@@ -130,6 +135,14 @@ def format(line, firstWord):
     #firstWord = False
     return firstWord                
  
+
+def lm_printer(lsArgs):
+    if lsArgs > 0: 
+        for y in range(lsArgs):
+            print(" ", end="")
+    else:
+        return       
+
 
 if __name__=='__main__':
         main()
