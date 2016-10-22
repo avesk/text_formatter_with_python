@@ -9,13 +9,18 @@ charCount = 0
 
 
 def main():
+        idx = 0
         line = 0
         firstWord = True
         for line in fileinput.input():
             if(set_args(line)):
+                if idx == 0:
+                    lm_printer(formatKeys["LM"])
+                    firstMargin = formatKeys["LM"]
                 continue
-            format(line, firstWord)
-            #firstWord = False   
+            firstWord = format(line, firstWord, firstMargin)
+            idx +=1
+            firstMargin = 0  
         print()
 
 def set_args(line):
@@ -77,23 +82,29 @@ def set_args(line):
    
     return isCode
 
-def format(line, firstWord):
+def format(line, firstWord, firstMargin):
     global formatKeys
     global charCount
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
-        if line == '\n':
-            print('\n')
-            firstWord = True
-            return
+        
+        if firstMargin !=0:
+            charCount = formatKeys["LM"]
 
-        else:    
+        if line == '\n':
+            print()
+            lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
+            charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+            firstWord = True
+            return firstWord
+
+        else:
             line = line.strip()
             words = line.split()
             words
 
         for x in words:
-            #Adds the length of the current word plus one for theto charcount
+            #Adds the length of the current word 
             charCount += len(x)  
 
             # If char count exceeded the max allowed, print a newline, reset counter, add back the length because we are now on
@@ -102,16 +113,15 @@ def format(line, firstWord):
                 print()
                 lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
                 charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+                #charCount = 0
                 charCount += len(x) 
                 print(x, end="")
-                charCount+=1 #why is this here? Its working, but I dont know why
+                charCount+=1 #still dont know why this is here...
                 firstWord = False
                 continue
 
             #dont print a space if it is the first word of the file
             if firstWord:
-                lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
-                charCount += formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
                 print(x, end="")
                 firstWord = False
                 continue
@@ -120,22 +130,27 @@ def format(line, firstWord):
             # is the end of the line    
             elif charCount == formatKeys["LW"]:
                 print(" {}".format(x))
-                firstWord = True # Next word Is the first word on the line now
+                lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
+                charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+                firstWord = True
                 continue
 
             # if both of the above cases fail then the word will be printed out with no newline and a pre-space   
             print(" {}".format(x), end="")
             charCount +=1
-            firstWord = False #next word is not the first word on the line anymore
-            
-           
+            firstWord = False
+
+    #firstWord = False
+    return firstWord                
+ 
+
 def lm_printer(lsArgs):
-    
     if lsArgs > 0: 
         for y in range(lsArgs):
-                    print(" ", end="")
+            print(" ", end="")
     else:
-        return                
+        return       
+
 
 if __name__=='__main__':
         main()
