@@ -6,21 +6,26 @@ import fileinput
 
 formatKeys = {"LW": 0, "LM": 0, "LS": 0, "FT": "on"}
 charCount = 0
-
+withoutNewline = False
 
 def main():
+        global withoutNewline
         idx = 0
         line = 0
         firstWord = True
+        firstMargin = 0
         for line in fileinput.input():
             if(set_args(line)):
-                if idx == 0:
+                if idx == 0 and formatKeys["LM"] > 0:
+                    #print("LM ARGS: {}".format(formatKeys["LM"]))
                     lm_printer(formatKeys["LM"])
                     firstMargin = formatKeys["LM"]
+                    idx +=1
                 continue
             firstWord = format(line, firstWord, firstMargin)
             idx +=1
-            firstMargin = 0  
+            firstMargin = 0 
+    
         print()
 
 def set_args(line):
@@ -79,12 +84,13 @@ def set_args(line):
             formatKeys["FT"] = "on"
             #print(formatKeys)
             isCode = True
-   
+    
     return isCode
 
 def format(line, firstWord, firstMargin):
     global formatKeys
     global charCount
+    global withoutNewline
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
         
@@ -92,7 +98,9 @@ def format(line, firstWord, firstMargin):
             charCount = formatKeys["LM"]
 
         if line == '\n':
-            print()
+            print('\n')
+            ls_printer(formatKeys["LS"])
+            ls_printer(formatKeys["LS"])
             lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
             charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
             firstWord = True
@@ -104,32 +112,33 @@ def format(line, firstWord, firstMargin):
             words
 
         for x in words:
-            #Adds the length of the current word 
-            charCount += len(x)  
+            #Adds the length of the current word plus one for anticipated space
+            charCount += len(x)+1
+
+            #dont print a space if it is the first word of the file
+            if firstWord:
+                print(x, end="")
+                charCount -=1 # Because there is no space printed
+                firstWord = False
+                continue
 
             # If char count exceeded the max allowed, print a newline, reset counter, add back the length because we are now on
             # a fresh line. Proceed to the next iteration
             if charCount > formatKeys["LW"]: 
                 print()
+                ls_printer(formatKeys["LS"])
                 lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
                 charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
-                #charCount = 0
-                charCount += len(x) 
-                print(x, end="")
-                charCount+=1 #still dont know why this is here...
-                firstWord = False
-                continue
-
-            #dont print a space if it is the first word of the file
-            if firstWord:
+                charCount += len(x) #Add the length of the line to be printed to the charcount
                 print(x, end="")
                 firstWord = False
                 continue
 
             # If char count is at exactly the limit print out the word, and then print a newline. No space is added because it
             # is the end of the line    
-            elif charCount == formatKeys["LW"]:
+            if charCount == formatKeys["LW"]:
                 print(" {}".format(x))
+                ls_printer(formatKeys["LS"]) # Print out appropriate linespacing
                 lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
                 charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
                 firstWord = True
@@ -137,19 +146,28 @@ def format(line, firstWord, firstMargin):
 
             # if both of the above cases fail then the word will be printed out with no newline and a pre-space   
             print(" {}".format(x), end="")
-            charCount +=1
             firstWord = False
-
-    #firstWord = False
+    
+    else:
+        for x in line:
+            print(x, end="")
+            
     return firstWord                
  
 
-def lm_printer(lsArgs):
-    if lsArgs > 0: 
-        for y in range(lsArgs):
+def lm_printer(lmArgs):
+    if lmArgs > 0: 
+        for y in range(lmArgs):
             print(" ", end="")
     else:
-        return       
+        return 
+
+def ls_printer(lsArgs):
+    if lsArgs > 0: 
+        for y in range(lsArgs):
+            print()
+    else:
+        return      
 
 
 if __name__=='__main__':
