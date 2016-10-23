@@ -6,15 +6,21 @@ import fileinput
 
 formatKeys = {"LW": 0, "LM": 0, "LS": 0, "FT": "on"}
 charCount = 0
-withoutNewline = False
+noNewline = False
 
 def main():
-        global withoutNewline
+        global noNewline
         idx = 0
         line = 0
         firstWord = True
         firstMargin = 0
+        lastline = is_last_newline()
+
         for line in fileinput.input():
+            if lastline >0 and (idx+2 == lastline):
+                #print("I caught the last newline!!!!")
+                print()
+                break
             if(set_args(line)):
                 if idx == 0 and formatKeys["LM"] > 0:
                     #print("LM ARGS: {}".format(formatKeys["LM"]))
@@ -25,8 +31,9 @@ def main():
             firstWord = format(line, firstWord, firstMargin)
             idx +=1
             firstMargin = 0 
-    
-        print()
+
+        if not noNewline:
+            print()
 
 def set_args(line):
     global formatKeys
@@ -90,7 +97,7 @@ def set_args(line):
 def format(line, firstWord, firstMargin):
     global formatKeys
     global charCount
-    global withoutNewline
+    global noNewline
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
         
@@ -151,7 +158,7 @@ def format(line, firstWord, firstMargin):
     else:
         for x in line:
             print(x, end="")
-            
+        noNewline = True
     return firstWord                
  
 
@@ -167,8 +174,21 @@ def ls_printer(lsArgs):
         for y in range(lsArgs):
             print()
     else:
-        return      
+        return   
 
+def is_last_newline():
+    idx = 0
+
+    for x in fileinput.input():
+        lastline = x
+        idx +=1
+
+    if lastline == '\n':
+        #print("INDEX OF LAST LINE, and its a newline: {}".format(idx))
+        return idx  
+
+    else:
+        return 0
 
 if __name__=='__main__':
         main()
