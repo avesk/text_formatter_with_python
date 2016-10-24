@@ -8,6 +8,7 @@ formatKeys = {"LW": 0, "LM": 0, "LS": 0, "FT": "on"}
 charCount = 0
 #noNewline = False
 setNewParaflg = False
+newlinesInaRow = False
 
 def main():
         global noNewline
@@ -101,6 +102,7 @@ def format(line, firstWord, firstMargin, idx, lastline):
     global charCount
     global noNewline
     global setNewParaflg 
+    global newlinesInaRow
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
         
@@ -108,7 +110,16 @@ def format(line, firstWord, firstMargin, idx, lastline):
             charCount = formatKeys["LM"]
 
         if line == '\n':
-            if idx != lastline:
+
+            if newlinesInaRow: # this if will be evaluated true when there are two or more newlines in the file
+                print()
+                setNewParaflg = True
+                firstWord = True
+                return firstWord
+
+            newlinesInaRow = True # This signals that the last line was a newline, and if another newline occurs, only one line will be printed
+            
+            if idx != lastline: # The only case where this will not be printed is if the last line is a newline. This is to preserve the bottom of the file
                 print()
 
             print()
@@ -116,7 +127,8 @@ def format(line, firstWord, firstMargin, idx, lastline):
             firstWord = True
             return firstWord
 
-        else:
+        else: #Evaluated if the line is anything but a newline
+            newlinesInaRow = False
             #line = line.strip()
             words = line.split()
             words
