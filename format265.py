@@ -6,35 +6,37 @@ import fileinput
 
 formatKeys = {"LW": 0, "LM": 0, "LS": 0, "FT": "on"}
 charCount = 0
-noNewline = False
+#noNewline = False
+setNewParaflg = False
 
 def main():
         global noNewline
-        idx = 0
         line = 0
         firstWord = True
+        firstWordWithMargin = True
         firstMargin = 0
-        lastline = is_last_newline()
+        lastline = is_last_newline() #Get the length of the file
+        idx = 0 # Keep track of the current length of the file
+        filesFirstWord = 0 # Keep track of the file's very first word, and print margin for it
 
         for line in fileinput.input():
-            if lastline >0 and (idx+2 == lastline):
-                #print("I caught the last newline!!!!")
-                print()
-                break
-            if(set_args(line)):
-                if idx == 0 and formatKeys["LM"] > 0:
-                    #print("LM ARGS: {}".format(formatKeys["LM"]))
+            idx+=1 #Increment to the current index in the file
+
+            if(set_args(line)): # Only evaluate this if there was an argument processed
+                if firstWordWithMargin and formatKeys["LM"] > 0 and filesFirstWord == 0: # For adding margin to the first line
+
                     lm_printer(formatKeys["LM"])
                     firstMargin = formatKeys["LM"]
-                    idx +=1
+                    firstWordWithMargin = False
+                    
                 continue
-            firstWord = format(line, firstWord, firstMargin)
-            idx +=1
+            firstWord = format(line, firstWord, firstMargin, idx, lastline) #Set the truth value of format's return value to firstWord
             firstMargin = 0 
-
-        if not noNewline:
+            filesFirstWord = 1
+        if "on" in formatKeys["FT"]: 
+        #if not noNewline: #Only print a new line if FT is off
             print()
-
+        
 def set_args(line):
     global formatKeys
     isCode = False
@@ -59,23 +61,23 @@ def set_args(line):
             tempLine = line.replace('+',' ') # using a templine, because I want to perserve the original line for subsequent if statements
             tempLine = tempLine.split()
             formatKeys["LM"] += int(tempLine[1])
-            #print(formatKeys)
             isCode = True
 
         if "-" in line: #This block of code checks for if the arguments of LM are subtracting margin
             tempLine2 = line.replace('-',' ') # using a templine, because I want to perserve the original line for subsequent if statements
             tempLine2 = tempLine2.split()
             formatKeys["LM"] -= int(tempLine2[1])
-            #print(formatKeys)
             isCode = True
 
                         
         if "-" not in line and "+" not in line:
             line = line.split()
             if len(line) == 2:
+                #print("I JUST DID AN LM A REGULAR LM: Formatkeys: {}".format(formatKeys["LM"]))
                 formatKeys["LM"] = int(line[1])
-                #print(formatKeys)
+                #print("I JUST DID AN LM A REGULAR LM: Formatkeys: {}".format(formatKeys["LM"]))
                 isCode = True
+
     ### END LM argument checker ###
 
     if ".FT off" in line: 
@@ -94,10 +96,11 @@ def set_args(line):
     
     return isCode
 
-def format(line, firstWord, firstMargin):
+def format(line, firstWord, firstMargin, idx, lastline):
     global formatKeys
     global charCount
     global noNewline
+    global setNewParaflg 
 
     if formatKeys["FT"] is "on": #ensures that formatting is on
         
@@ -105,33 +108,40 @@ def format(line, firstWord, firstMargin):
             charCount = formatKeys["LM"]
 
         if line == '\n':
-            print('\n')
-            ls_printer(formatKeys["LS"])
-            ls_printer(formatKeys["LS"])
-            lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
-            charCount = formatKeys["LM"] #set the margin to the charcount because the margin is the only string on the line
+            if idx != lastline:
+                print()
+
+            print()
+            setNewParaflg = True
             firstWord = True
             return firstWord
 
         else:
-            line = line.strip()
+            #line = line.strip()
             words = line.split()
             words
 
         for x in words:
             #Adds the length of the current word plus one for anticipated space
-            charCount += len(x)+1
+            charCount += len(x)
 
             #dont print a space if it is the first word of the file
             if firstWord:
+                if setNewParaflg:
+                    ls_printer(formatKeys["LS"])
+                    ls_printer(formatKeys["LS"])
+                    lm_printer(formatKeys["LM"])
+                    charCount = formatKeys["LM"]
+                    charCount += len(x)
+                    setNewParaflg = False
+
                 print(x, end="")
-                charCount -=1 # Because there is no space printed
                 firstWord = False
                 continue
 
             # If char count exceeded the max allowed, print a newline, reset counter, add back the length because we are now on
             # a fresh line. Proceed to the next iteration
-            if charCount > formatKeys["LW"]: 
+            if charCount+1 > formatKeys["LW"]: 
                 print()
                 ls_printer(formatKeys["LS"])
                 lm_printer(formatKeys["LM"]) #call this function to add appropriate line spacing after the newline
@@ -154,11 +164,12 @@ def format(line, firstWord, firstMargin):
             # if both of the above cases fail then the word will be printed out with no newline and a pre-space   
             print(" {}".format(x), end="")
             firstWord = False
+            charCount +=1
     
     else:
         for x in line:
             print(x, end="")
-        noNewline = True
+        #noNewline = True
     return firstWord                
  
 
@@ -177,15 +188,15 @@ def ls_printer(lsArgs):
         return   
 
 def is_last_newline():
-    idx = 0
+    index = 0
 
-    for x in fileinput.input():
-        lastline = x
-        idx +=1
+    for line in fileinput.input():
+        lastline = line
+        index +=1
 
     if lastline == '\n':
         #print("INDEX OF LAST LINE, and its a newline: {}".format(idx))
-        return idx  
+        return index  
 
     else:
         return 0
